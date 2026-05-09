@@ -553,7 +553,7 @@ export const layer = Layer.effect(
               state: {
                 status: "running",
                 time: { start: started },
-                input: { command: input.command },
+                input: { command: input.command, description: "" },
               },
             }
             yield* sessions.updatePart(part)
@@ -598,7 +598,7 @@ export const layer = Layer.effect(
                   time: { ...part.state.time, end: completed },
                   input: part.state.input,
                   title: "",
-                  metadata: { output, description: "" },
+                  metadata: { output, description: "", origin: "user-triggered-shell" },
                   output,
                 }
                 yield* sessions.updatePart(part)
