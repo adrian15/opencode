@@ -88,6 +88,11 @@
     gap: 12px;
   }
 
+  [data-slot="session-turn-assistant-content"][data-assistant-origin="contains-user-triggered-shell"] {
+    border-left: 2px solid var(--border-warning-base);
+    padding-left: 10px;
+  }
+
   [data-slot="session-turn-diffs"] {
     width: 100%;
     min-width: 0;
