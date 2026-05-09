@@ -556,7 +556,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       .filter((agent) => !agent.hidden && agent.mode !== "primary")
       .map((agent): AtOption => ({ type: "agent", name: agent.name, display: agent.name })),
   )
-  const agentNames = createMemo(() => local.agent.list().map((agent) => agent.name))
+  const shellAgentOption = "__prompt_mode_shell__"
+  const agentNames = createMemo(() => [...local.agent.list().map((agent) => agent.name), shellAgentOption])
 
   const handleAtSelect = (option: AtOption | undefined) => {
     if (!option) return
@@ -1484,8 +1485,17 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                       <Select
                         size="normal"
                         options={agentNames()}
-                        current={local.agent.current()?.name ?? ""}
+                        current={store.mode === "shell" ? shellAgentOption : (local.agent.current()?.name ?? "")}
+                        label={(value) => (value === shellAgentOption ? language.t("prompt.mode.shell") : value)}
                         onSelect={(value) => {
+                          if (value === shellAgentOption) {
+                            setMode("shell")
+                            restoreFocus()
+                            return
+                          }
+                          if (store.mode === "shell") {
+                            setMode("normal")
+                          }
                           local.agent.set(value)
                           restoreFocus()
                         }}
