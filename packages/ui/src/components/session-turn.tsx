@@ -98,8 +98,9 @@ function partIsBashTool(part: PartType) {
 
 function partIsUserTriggeredShell(part: PartType) {
   if (!partIsBashTool(part)) return false
-  if (part.metadata?.origin === "user-triggered-shell") return true
-  if ("metadata" in part.state && part.state.metadata?.origin === "user-triggered-shell") return true
+  const tool = part as { metadata?: { origin?: string }; state?: { metadata?: { origin?: string } } }
+  if (tool.metadata?.origin === "user-triggered-shell") return true
+  if (tool.state?.metadata?.origin === "user-triggered-shell") return true
   return false
 }
 
