@@ -92,6 +92,17 @@ function list<T>(value: T[] | undefined | null, fallback: T[]) {
 
 const hidden = new Set(["todowrite"])
 
+function partIsBashTool(part: PartType) {
+  return part.type === "tool" && part.tool === "bash"
+}
+
+function partIsUserTriggeredShell(part: PartType) {
+  if (!partIsBashTool(part)) return false
+  if (part.metadata?.origin === "user-triggered-shell") return true
+  if ("metadata" in part.state && part.state.metadata?.origin === "user-triggered-shell") return true
+  return false
+}
+
 function partState(part: PartType, showReasoningSummaries: boolean) {
   if (part.type === "tool") {
     if (hidden.has(part.tool)) return
@@ -281,6 +292,24 @@ export function SessionTurn(
     { equals: same },
   )
 
+  const assistantMessagesByOrigin = createMemo(() => {
+    const user: AssistantMessage[] = []
+    const model: AssistantMessage[] = []
+
+    for (const message of assistantMessages()) {
+      const fromUserTrigger = list(data.store.part?.[message.id], emptyParts).some(partIsUserTriggeredShell)
+      if (fromUserTrigger) {
+        user.push(message)
+        continue
+      }
+      model.push(message)
+    }
+
+    return { user, model }
+  })
+  const userAssistantMessages = createMemo(() => assistantMessagesByOrigin().user)
+  const hasUserTriggeredShellAssistant = createMemo(() => userAssistantMessages().length > 0)
+
   const interrupted = createMemo(() => assistantMessages().some((m) => m.error?.name === "MessageAbortedError"))
   const divider = createMemo(() => {
     if (compaction()) return i18n.t("ui.messagePart.compaction")
@@ -399,14 +428,18 @@ export function SessionTurn(
                 </div>
               </Show>
               <Show when={assistantMessages().length > 0}>
-                <div data-slot="session-turn-assistant-content" aria-hidden={working()}>
+                <div
+                  data-slot="session-turn-assistant-content"
+                  data-assistant-origin={hasUserTriggeredShellAssistant() ? "contains-user-triggered-shell" : undefined}
+                  aria-hidden={working()}
+                >
                   <AssistantParts
                     messages={assistantMessages()}
                     showAssistantCopyPartID={assistantCopyPartID()}
                     turnDurationMs={turnDurationMs()}
                     working={working()}
                     showReasoningSummaries={showReasoningSummaries()}
-                    shellToolDefaultOpen={props.shellToolDefaultOpen}
+                    shellToolDefaultOpen={props.shellToolDefaultOpen || hasUserTriggeredShellAssistant()}
                     editToolDefaultOpen={props.editToolDefaultOpen}
                   />
                 </div>
