@@ -803,7 +803,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
               state: {
                 status: "running",
                 time: { start: started },
-                input: { command: input.command },
+                input: { command: input.command, description: "" },
               },
             }
             yield* sessions.updatePart(part)
@@ -844,7 +844,7 @@ NOTE: At any point in time through this workflow you should feel free to ask the
                   time: { ...part.state.time, end: completed },
                   input: part.state.input,
                   title: "",
-                  metadata: { output, description: "" },
+                  metadata: { output, description: "", origin: "user-triggered-shell" },
                   output,
                 }
                 yield* sessions.updatePart(part)
